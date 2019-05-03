@@ -1,6 +1,18 @@
 /*  样式初始化 */
-html,body,#app{
-    margin: 0;
-    padding: 0;
-    height: 100%;
+html,
+body,
+#app {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+.el-submenu__title,
+.el-menu-item {
+  font-size: 13px;
+}
+
+
+.iconfont {
+  margin-right: 10px;
 }
