@@ -7,6 +7,30 @@
       <el-breadcrumb-item>用户列表</el-breadcrumb-item>
     </el-breadcrumb>
 
+    <!-- //?分配角色对话框 -->
+    <el-dialog title="分配角色" :visible.sync="setRoleDialog" width="50%" @close="resetSetRole()">
+      <!-- //?表单信息 -->
+      <el-form ref="setRoleRef" :model="setRoleForm" label-width="100px" :rules="setRoleRules">
+        <el-form-item label="当前用户">{{setRoleForm.username}}</el-form-item>
+        <el-form-item label="当前角色">{{setRoleForm.role_name}}</el-form-item>
+        <el-form-item label="分配新角色" prop="rid">
+          <!-- //?下拉列表 -->
+          <el-select v-model="setRoleForm.rid" clearable placeholder="请选择">
+            <el-option
+              v-for="item in roleList"
+              :key="item.id"
+              :label="item.roleName"
+              :value="item.id"
+            ></el-option>
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="setRoleDialog = false">取 消</el-button>
+        <el-button type="primary" @click="setRole()">确 定</el-button>
+      </span>
+    </el-dialog>
+
     <!-- //?添加用户对话框 -->
     <el-dialog title="添加用户" :visible.sync="addUserDialog" width="50%" @close="resetAddUser()">
       <!-- <span>这是一段信息</span> -->
@@ -32,7 +56,7 @@
       </span>
     </el-dialog>
 
-    <!-- //?添加用户对话框 -->
+    <!-- //?编辑用户对话框 -->
     <el-dialog title="编辑用户" :visible.sync="editUserDialog" width="50%" @close="resetEditUser()">
       <!-- <span>这是一段信息</span> -->
       <!-- //?表单信息 -->
@@ -112,7 +136,12 @@
               placement="top"
               :enterable="false"
             >
-              <el-button type="warning" icon="el-icon-setting" size="mini"></el-button>
+              <el-button
+                type="warning"
+                icon="el-icon-setting"
+                size="mini"
+                @click="showSetRole(info.row)"
+              ></el-button>
             </el-tooltip>
           </template>
         </el-table-column>
@@ -138,14 +167,56 @@ export default {
     this.getUserList();
   },
   methods: {
+    // 重置分配角色表单
+    resetSetRole() {
+      this.$refs.setRoleRef.resetFields();
+    },
+    // 分配角色
+    setRole() {
+      this.$refs.setRoleRef.validate(async valid => {
+        if (valid) {
+          const { data: dt } = await this.$http.put(
+            `users/${this.setRoleForm.id}/role`,
+            { rid: this.setRoleForm.rid }
+          );
+          // console.log(dt);
+          if (dt.meta.status !== 200) {
+            return this.$message.error(dt.meta.msg);
+          }
+          // 关闭,提示,刷新页面
+          this.setRoleDialog = false
+          this.$message.success(dt.meta.msg);
+          this.getUserList()
+        }
+      });
+    },
+    // 显示分配角色
+    async showSetRole(user) {
+      this.setRoleDialog = true;
+      this.setRoleForm = user;
+      // axios请求.角色数据
+      const { data: dt } = await this.$http.get("roles");
+      // console.log(dt)
+      if (dt.meta.status !== 200) {
+        return this.$message.error(dt.meta.msg);
+      }
+      // ? table可以g遍历子节点children,需要修改
+      dt.data.forEach(item => {
+        item.son = item.children;
+        delete item.children;
+      });
+      //   赋值给权限列表数据
+      this.roleList = dt.data;
+    },
     // 修改数据
     editUser() {
       this.$refs.editUserRef.validate(async valid => {
         if (valid) {
           const { data: dt } = await this.$http.put(
-            "users/" + this.editUserForm.id,this.editUserForm
+            "users/" + this.editUserForm.id,
+            this.editUserForm
           );
-        //   console.log(dt);
+          //   console.log(dt);
           if (dt.meta.status !== 200) {
             return this.$message.error(dt.meta.msg);
           }
@@ -233,7 +304,7 @@ export default {
       if (dt.meta.status !== 200) {
         return this.$message.error(dt.meta.msg);
       }
-      console.log(user);
+      // console.log(user);
       // 提示
       this.$message.success(dt.meta.msg);
     },
@@ -271,6 +342,19 @@ export default {
     };
 
     return {
+      // 接收角色数据
+      roleList: [],
+      // 分配角色开关
+      setRoleDialog: false,
+      // 分配角色表单数据对象
+      setRoleForm: {
+        //?根据api接口
+        rid: 0
+      },
+      // 分配角色表单验证
+      setRoleRules: {
+        rid: [{ required: true, message: "新角色必选", trigger: "change" }]
+      },
       // 编辑用户对话框开关
       editUserDialog: false,
       // 编辑用户表单数据对象

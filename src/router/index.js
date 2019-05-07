@@ -6,6 +6,8 @@ import Home from '@/components/Home'
 // 子级路由引入
 import Welcome from '@/components/Welcome'
 import User from '@/components/User'
+import Rights from '@/components/Rights'
+import Role from '@/components/Role'
 
 Vue.use(Router)
 
@@ -17,6 +19,8 @@ const router = new Router({
     {path: '/home', component: Home,redirect: 'welcome',children: [
       {path: '/welcome',component: Welcome},
       {path: '/users',component: User},
+      {path: '/rights',component: Rights},
+      {path: '/roles',component: Role},
       ]},
   ]
 })
